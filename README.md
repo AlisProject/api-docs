@@ -38,8 +38,8 @@ curl -X GET "https://alis.to/api/articles/popular?limit=1" -H "accept: applicati
 ![articles_popular](./img/articles_popular.gif)
 
 # コミュニティ
-- [ALIS](https://alis.to/)
-  - ALIS用のツールを作成された方が記事を書いています。
+- [公式Discord](https://discordapp.com/invite/b6T44q3)
+  - ALIS公式のDiscordコミュニティです。
 - [ALIS Supporters](https://discordapp.com/invite/kSTAkuT)
   - 非公式Discordコミュニティ。#ハッカー部 という部屋があります。
 
