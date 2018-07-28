@@ -204,9 +204,11 @@ paths:
           schema:
             type: object
             properties:
-              alistoken:
+              alis_token:
                 type: "number"
                 format: "double"
+              article_id:
+                type: "string"
       x-amazon-apigateway-integration:
         responses:
           default:
