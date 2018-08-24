@@ -1,11 +1,11 @@
 swagger: "2.0"
 info:
-  version: "β0.13.0"
+  version: "β0.19.0"
   title: "alisapi"
 host: "alis.to"
 basePath: "/api"
 schemes:
-- "https"
+  - https
 definitions:
   ArticleInfo:
     type: object
@@ -94,7 +94,125 @@ definitions:
     properties:
       private_eth_address:
         type: string
+  Notification:
+    type: object
+    properties:
+      user_id:
+        type: string
+      sort_key:
+        type: integer
+      type:
+        type: string
+      acted_user_id:
+        type: string
+      created_at:
+        type: integer
+  Comment:
+    type: object
+    properties:
+      comment_id:
+        type: string
+      article_id:
+        type: string
+      sort_key:
+        type: integer
+      user_id:
+        type: string
+      text:
+        type: string
+      created_at:
+        type: integer
+  Topic:
+    type: object
+    properties:
+      name:
+        type: string
+      display_name:
+        type: string
+      order:
+        type: integer
+      index_hash_key:
+        type: string
+  Publish:
+    type: object
+    properties:
+      topic:
+        type: string
+      tgas:
+        type: array
+        items:
+          type: string
 paths:
+  /search/articles:
+    get:
+      description: "記事検索"
+      parameters:
+      - name: "query"
+        in: "query"
+        description: "検索ワード"
+        required: true
+        type: "string"
+      - name: "limit"
+        in: "query"
+        description: "取得件数"
+        required: false
+        type: "integer"
+        minimum: 1
+      - name: "page"
+        in: "query"
+        description: "ページ"
+        required: false
+        type: "integer"
+      responses:
+        "200":
+          description: "検索記事一覧"
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ArticleInfo'
+      x-amazon-apigateway-integration:
+        responses:
+          default:
+            statusCode: "200"
+        uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ElasticSearchSearchArticles.Arn}/invocations
+        passthroughBehavior: when_no_templates
+        httpMethod: POST
+        type: aws_proxy
+  /search/users:
+    get:
+      description: "ユーザー検索"
+      parameters:
+      - name: "query"
+        in: "query"
+        description: "検索ワード"
+        required: true
+        type: "string"
+      - name: "limit"
+        in: "query"
+        description: "取得件数"
+        required: false
+        type: "integer"
+        minimum: 1
+      - name: "page"
+        in: "query"
+        description: "ページ"
+        required: false
+        type: "integer"
+      responses:
+        "200":
+          description: "検索ユーザー一覧"
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/UserInfo'
+      x-amazon-apigateway-integration:
+        responses:
+          default:
+            statusCode: "200"
+        uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ElasticSearchSearchUsers.Arn}/invocations
+        passthroughBehavior: when_no_templates
+        httpMethod: POST
+        type: aws_proxy
   /articles/recent:
     get:
       description: "最新記事一覧情報を取得"
@@ -105,17 +223,16 @@ paths:
         required: false
         type: "integer"
         minimum: 1
-      - name: "article_id"
+      - name: "topic"
         in: "query"
-        description: "ページング処理における、現在のページの最後の記事のID"
+        description: "トピック"
         required: false
         type: "string"
-      - name: "sort_key"
+      - name: "page"
         in: "query"
-        description: "ページング処理における、現在のページの最後の記事のソートキー"
+        description: "ページ数"
         required: false
         type: "integer"
-        minimum: 1
       responses:
         "200":
           description: "最新記事一覧"
@@ -141,17 +258,17 @@ paths:
         required: false
         type: 'integer'
         minimum: 1
-      - name: 'article_id'
+      - name: 'page'
         in: 'query'
-        description: 'ページング処理における、現在のページの最後の記事のID'
-        required: false
-        type: 'string'
-      - name: 'score'
-        in: 'query'
-        description: 'ページング処理における、現在のページの最後の記事のスコア数'
+        description: '取得対象ページのoffset'
         required: false
         type: 'integer'
         minimum: 1
+      - name: 'topic'
+        in: 'query'
+        description: '検索対象のトピック名'
+        required: false
+        type: 'string'
       responses:
         '200':
           description: '人気記事一覧'
@@ -241,6 +358,54 @@ paths:
         passthroughBehavior: when_no_templates
         httpMethod: POST
         type: aws_proxy
+  /articles/{article_id}/comments:
+    get:
+      description: '指定された article_id の記事のコメントの一覧を取得する'
+      parameters:
+      - name: 'article_id'
+        in: 'path'
+        description: '対象記事の指定するために使用'
+        required: true
+        type: 'string'
+      responses:
+        '200':
+          description: '対象記事のコメントの一覧'
+          schema:
+            $ref: '#/definitions/Comment'
+      x-amazon-apigateway-integration:
+        responses:
+          default:
+            statusCode: "200"
+        uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ArticlesCommentsIndex.Arn}/invocations
+        passthroughBehavior: when_no_templates
+        httpMethod: POST
+        type: aws_proxy
+  /comments/{comment_id}/likes:
+    get:
+      description: '指定されたコメントに付与されているいいね数を取得する'
+      parameters:
+      - name: 'comment_id'
+        in: 'path'
+        description: '対象コメントを指定するために使用'
+        required: true
+        type: 'string'
+      responses:
+        '200':
+          description: '対象記事のコメントの一覧'
+          schema:
+            type: object
+            properties:
+              count:
+                type: "number"
+                format: "double"
+      x-amazon-apigateway-integration:
+        responses:
+          default:
+            statusCode: "200"
+        uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CommentsLikesShow.Arn}/invocations
+        passthroughBehavior: when_no_templates
+        httpMethod: POST
+        type: aws_proxy
   /me/articles/drafts:
     get:
       description: '下書き記事一覧情報を取得'
@@ -315,6 +480,12 @@ paths:
         description: '対象記事の指定するために使用'
         required: true
         type: 'string'
+      - name: 'publish'
+        in: 'body'
+        description: 'publish object'
+        required: true
+        schema:
+          $ref: '#/definitions/Publish'
       responses:
         '200':
           description: 'successful operation'
@@ -472,6 +643,12 @@ paths:
         description: '対象記事を指定するために使用'
         required: true
         type: 'string'
+      - name: 'publish'
+        in: 'body'
+        description: 'publish object'
+        required: true
+        schema:
+          $ref: '#/definitions/Publish'
       responses:
         '200':
           description: 'successful operation'
@@ -530,6 +707,109 @@ paths:
           default:
             statusCode: "200"
         uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MeArticlesLikeCreate.Arn}/invocations
+        passthroughBehavior: when_no_templates
+        httpMethod: POST
+        type: aws_proxy
+  /me/articles/{article_id}/comments:
+    post:
+      description: '指定された article_id の記事に対してコメントを登録する'
+      parameters:
+      - name: 'article_id'
+        in: 'path'
+        description: '対象記事の指定するために使用'
+        required: true
+        type: 'string'
+      responses:
+        '200':
+          description: 'コメント登録の完了'
+          schema:
+            type: object
+            properties:
+              comment_id:
+                type: 'string'
+      security:
+        - cognitoUserPool: []
+      x-amazon-apigateway-integration:
+        responses:
+          default:
+            statusCode: "200"
+        uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MeArticlesCommentsCreate.Arn}/invocations
+        passthroughBehavior: when_no_templates
+        httpMethod: POST
+        type: aws_proxy
+
+  /me/articles/{article_id}/comments/likes:
+    get:
+      description: '指定された記事のコメントの中で、自分がいいねを実行したコメントのIDの一覧を取得する'
+      parameters:
+      - name: 'article_id'
+        in: 'path'
+        description: '対象記事を指定するために使用'
+        required: true
+        type: 'string'
+      responses:
+        '200':
+          description: 'いいねを実施したコメントのIDの一覧'
+          schema:
+            type: object
+            properties:
+              comment_ids:
+                type: array
+                items:
+                  type: 'string'
+                  enum:
+                    - "comment_id"
+      security:
+        - cognitoUserPool: []
+      x-amazon-apigateway-integration:
+        responses:
+          default:
+            statusCode: "200"
+        uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MeArticlesCommentsLikesIndex.Arn}/invocations
+        passthroughBehavior: when_no_templates
+        httpMethod: POST
+        type: aws_proxy
+  /me/comments/{comment_id}:
+    delete:
+      description: '指定されたコメントを削除する'
+      parameters:
+      - name: 'comment_id'
+        in: 'path'
+        description: '対象コメントを指定するために使用'
+        required: true
+        type: 'string'
+      responses:
+        '200':
+          description: 'コメント削除の完了'
+      security:
+        - cognitoUserPool: []
+      x-amazon-apigateway-integration:
+        responses:
+          default:
+            statusCode: "200"
+        uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MeCommentsDelete.Arn}/invocations
+        passthroughBehavior: when_no_templates
+        httpMethod: POST
+        type: aws_proxy
+  /me/comments/{comment_id}/likes:
+    post:
+      description: '指定されたコメントに対していいねする'
+      parameters:
+      - name: 'comment_id'
+        in: 'path'
+        description: '対象コメントを指定するために使用'
+        required: true
+        type: 'string'
+      responses:
+        '200':
+          description: 'いいねの完了'
+      security:
+        - cognitoUserPool: []
+      x-amazon-apigateway-integration:
+        responses:
+          default:
+            statusCode: "200"
+        uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MeCommentsLikesCreate.Arn}/invocations
         passthroughBehavior: when_no_templates
         httpMethod: POST
         type: aws_proxy
@@ -734,12 +1014,20 @@ paths:
     put:
       description: '下書き記事を更新'
       parameters:
+      - name: 'article_id'
+        in: 'path'
+        description: '対象記事の指定するために使用'
+        required: true
+        type: 'string'
       - name: 'article'
         in: 'body'
         description: 'article object'
         required: true
         schema:
           $ref: '#/definitions/MeArticlesDraftsCreate'
+      responses:
+        '200':
+          description: 'successful operation'
       security:
         - cognitoUserPool: []
       x-amazon-apigateway-integration:
@@ -812,3 +1100,87 @@ paths:
         passthroughBehavior: when_no_templates
         httpMethod: POST
         type: aws_proxy
+  /me/notifications:
+    get:
+      description: ログインユーザーの通知の一覧を取得
+      responses:
+        '200':
+          description: 'ログインユーザーの通知の一覧'
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Notification'
+      security:
+        - cognitoUserPool: []
+      x-amazon-apigateway-integration:
+        responses:
+          default:
+            statusCode: '200'
+        uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MeNotificationsIndex.Arn}/invocations
+        passthroughBehavior: when_no_templates
+        httpMethod: POST
+        type: aws_proxy
+  /me/unread_notification_managers:
+    get:
+      description: 'ログインユーザーの通知の未読情報を取得'
+      responses:
+        '200':
+          description: '対象ユーザの通知未読情報'
+          schema:
+            type: object
+            properties:
+              unread:
+                type: boolean
+      security:
+        - cognitoUserPool: []
+      x-amazon-apigateway-integration:
+        responses:
+          default:
+            statusCode: '200'
+        uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MeUnreadNotificationManagersShow.Arn}/invocations
+        passthroughBehavior: when_no_templates
+        httpMethod: POST
+        type: aws_proxy
+    put:
+      description: 'ログインユーザーの通知の未読情報を未読に更新する'
+      responses:
+        '200':
+          description: 'successful operation'
+      security:
+        - cognitoUserPool: []
+      x-amazon-apigateway-integration:
+        responses:
+          default:
+            statusCode: '200'
+        uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MeUnreadNotificationManagersUpdate.Arn}/invocations
+        passthroughBehavior: when_no_templates
+        httpMethod: POST
+        type: aws_proxy
+  /topics:
+    get:
+      description: トピックの一覧を取得
+      responses:
+        '200':
+          description: トピックの一覧
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Topic'
+      x-amazon-apigateway-integration:
+        responses:
+          default:
+            statusCode: '200'
+        uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TopicsIndex.Arn}/invocations
+        passthroughBehavior: when_no_templates
+        httpMethod: POST
+        type: aws_proxy
+securityDefinitions:
+  cognitoUserPool:
+    type: apiKey
+    name: Authorization
+    in: header
+    x-amazon-apigateway-authtype: cognito_user_pools
+    x-amazon-apigateway-authorizer:
+      type: cognito_user_pools
+      providerARNs:
+        - !Ref CognitoUserPoolArn
