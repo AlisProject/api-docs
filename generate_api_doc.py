@@ -1,4 +1,5 @@
 import yaml
+import json
 import re
 import codecs
 from collections import OrderedDict
@@ -37,6 +38,18 @@ def prepare_api_doc():
             del output_json['paths'][path]['put']['x-amazon-apigateway-integration']
         if 'delete' in output_json['paths'][path].keys():
             del output_json['paths'][path]['delete']['x-amazon-apigateway-integration']
+
+    # 固定値の項目を挿入する
+    output_json['info']['title'] = 'alisapi'
+    output_json['basePath'] = '/api'
+    output_json['host'] = 'alis.to'
+    print('api-docsのバージョンを入力してください')
+    version = input()
+    output_json['info']['version'] = str(version)
+
+    # jsonファイル作成
+    f = open('alis_api.json', 'w')
+    json.dump(output_json, f, ensure_ascii=False, indent=2)
 
     # 整形したPythonオブジェクトをyamlに変換
     with codecs.open('alis_api.yaml', 'w', 'utf-8') as f:
