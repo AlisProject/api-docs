@@ -37,6 +37,12 @@ curl -X GET "https://alis.to/api/articles/popular?limit=1" -H "accept: applicati
 ドキュメントの該当箇所で以下のように操作すると上記で使用したコマンドが作成できます。
 ![articles_popular](./img/articles_popular.gif)
 
+# SDK
+コミュニティ作成のSDKが存在します。
+
+- [Node.js](https://github.com/alisista/alis) (thanks to [@ocrybit](https://github.com/ocrybit))
+- [Python](https://github.com/alisista/py-alis) (thanks to [@hoosan](https://github.com/hoosan))
+
 # コミュニティ
 - [公式Discord](https://discordapp.com/invite/b6T44q3)
   - ALIS公式のDiscordコミュニティです。
