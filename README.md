@@ -33,6 +33,10 @@ curl -X GET "https://alis.to/api/articles/popular?limit=1" -H "accept: applicati
 
 ※日本語などのマルチバイト文字はUnicode Escape Sequenceでエンコードされているためデコードする必要があります。
 
+## 認証が必要な API の実行例
+認証が必要な API を実行する場合は、多少実装が必要になるため下記のサンプルをご確認ください（ログインユーザ情報を取得するサンプルです）。
+- [サンプル](https://github.com/keillera/alis-api-sample/blob/master/exec_api_with_auth_sample.py)
+
 ### コマンドの作成
 ドキュメントの該当箇所で以下のように操作すると上記で使用したコマンドが作成できます。
 ![articles_popular](./img/articles_popular.gif)
