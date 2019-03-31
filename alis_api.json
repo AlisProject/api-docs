@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "title": "alisapi",
-    "version": "β0.19.0"
+    "version": "β0.32.0"
   },
   "basePath": "/api",
   "schemes": [
@@ -71,6 +71,38 @@
           "type": "string"
         },
         "overview": {
+          "type": "string"
+        }
+      }
+    },
+    "MeArticlesDraftsTitleUpdate": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        }
+      }
+    },
+    "MeArticlesPublicTitleUpdate": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        }
+      }
+    },
+    "MeArticlesDraftsBodyUpdate": {
+      "type": "object",
+      "properties": {
+        "body": {
+          "type": "string"
+        }
+      }
+    },
+    "MeArticlesPublicBodyUpdate": {
+      "type": "object",
+      "properties": {
+        "body": {
           "type": "string"
         }
       }
@@ -144,6 +176,61 @@
         }
       }
     },
+    "MeWalletTip": {
+      "type": "object",
+      "properties": {
+        "article_id": {
+          "type": "string"
+        },
+        "tip_value": {
+          "type": "string"
+        }
+      }
+    },
+    "MeExternalProviderUserCreate": {
+      "type": "object",
+      "properties": {
+        "user_id": {
+          "type": "string"
+        }
+      }
+    },
+    "SignUpLineAuthorizeUrl": {
+      "type": "object",
+      "properties": {
+        "callback_url": {
+          "type": "string"
+        }
+      }
+    },
+    "LoginLineAuthorizeUrl": {
+      "type": "object",
+      "properties": {
+        "callback_url": {
+          "type": "string"
+        }
+      }
+    },
+    "LoginLineAuthorizeRequest": {
+      "type": "object",
+      "properties": {
+        "accessToken": {
+          "type": "string"
+        },
+        "lastAuthUser": {
+          "type": "string"
+        },
+        "idToken": {
+          "type": "string"
+        },
+        "refreshToken": {
+          "type": "string"
+        },
+        "hasUserId": {
+          "type": "boolean"
+        }
+      }
+    },
     "Notification": {
       "type": "object",
       "properties": {
@@ -210,11 +297,85 @@
         "topic": {
           "type": "string"
         },
-        "tgas": {
+        "tags": {
           "type": "array",
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "PublishWithHeader": {
+      "type": "object",
+      "properties": {
+        "topic": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "eye_catch_url": {
+          "type": "string"
+        }
+      }
+    },
+    "Tag": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "name_with_analyzer": {
+          "type": "string"
+        },
+        "count": {
+          "type": "integer"
+        },
+        "created_at": {
+          "type": "integer"
+        }
+      }
+    },
+    "Fraud": {
+      "type": "object",
+      "properties": {
+        "reason": {
+          "type": "string",
+          "enum": [
+            "illegal_act",
+            "anything_contrary_to_public_order",
+            "nuisance",
+            "copyright_violation",
+            "slander",
+            "illegal_token_usage",
+            "other"
+          ]
+        },
+        "origin_url": {
+          "type": "string"
+        },
+        "free_text": {
+          "type": "string"
+        }
+      }
+    },
+    "DistributedTokens": {
+      "type": "object",
+      "properties": {
+        "article": {
+          "type": "integer"
+        },
+        "like": {
+          "type": "integer"
+        },
+        "tip": {
+          "type": "integer"
+        },
+        "bonus": {
+          "type": "integer"
         }
       }
     }
@@ -227,8 +388,8 @@
           {
             "name": "query",
             "in": "query",
-            "description": "検索ワード",
-            "required": true,
+            "description": "検索ワード(tag, queryいずれかは必須)",
+            "required": false,
             "type": "string"
           },
           {
@@ -243,6 +404,13 @@
             "name": "page",
             "in": "query",
             "description": "ページ",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "tag",
+            "in": "query",
+            "description": "検索タグ(tag, queryいずれかは必須)",
             "required": false,
             "type": "integer"
           }
@@ -294,6 +462,46 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/UserInfo"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search/tags": {
+      "get": {
+        "description": "タグ検索",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "description": "検索ワード",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "取得件数",
+            "required": false,
+            "type": "integer",
+            "minimum": 1
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "ページ",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "タグ一覧",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Tag"
               }
             }
           }
@@ -371,6 +579,56 @@
         "responses": {
           "200": {
             "description": "人気記事一覧",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ArticleInfo"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/articles/eyecatch": {
+      "get": {
+        "description": "アイキャッチ記事一覧情報を取得",
+        "responses": {
+          "200": {
+            "description": "アイキャッチ記事一覧",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ArticleInfo"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/articles/recommended": {
+      "get": {
+        "description": "オススメ記事一覧情報を取得",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "取得件数",
+            "required": false,
+            "type": "integer",
+            "minimum": 1
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "取得対象ページのoffset",
+            "required": false,
+            "type": "integer",
+            "minimum": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "オススメ記事一覧",
             "schema": {
               "type": "array",
               "items": {
@@ -509,6 +767,294 @@
         }
       }
     },
+    "/login/twitter": {
+      "post": {
+        "description": "Twitterログインの実施",
+        "parameters": [
+          {
+            "name": "request",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "oauth_token",
+                "oauth_verifier"
+              ],
+              "properties": {
+                "oauth_token": {
+                  "type": "string"
+                },
+                "oauth_verifier": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "アクセストークンを取得",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "access_token": {
+                  "type": "string"
+                },
+                "refresh_token": {
+                  "type": "string"
+                },
+                "id_token": {
+                  "type": "string"
+                },
+                "has_user_id": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証エラー",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/login/twitter/authorization_url": {
+      "get": {
+        "description": "Twitter認証画面のURLを取得する",
+        "responses": {
+          "200": {
+            "description": "Twitter認証画面のURL",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sign_up/line/authorization_url": {
+      "get": {
+        "description": "LINEサインアップ用URL返却のAPI",
+        "responses": {
+          "200": {
+            "description": "LINEサインアップ用URL",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "callback_url": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/login/line/authorization_url": {
+      "get": {
+        "description": "LINEログイン用URL返却のAPI",
+        "responses": {
+          "200": {
+            "description": "LINEログイン用URL",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "callback_url": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/login/line": {
+      "post": {
+        "description": "LINEログインユーザーを作成",
+        "responses": {
+          "200": {
+            "description": "認証用codeの受け渡し",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/login/yahoo": {
+      "post": {
+        "description": "Yahooログインの実施",
+        "parameters": [
+          {
+            "name": "request",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "code",
+                "state"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "アクセストークンを取得",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "access_token": {
+                  "type": "string"
+                },
+                "refresh_token": {
+                  "type": "string"
+                },
+                "id_token": {
+                  "type": "string"
+                },
+                "has_user_id": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証エラー",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/login/yahoo/authorization_url": {
+      "get": {
+        "description": "Yahoo認証画面のURLを取得する",
+        "responses": {
+          "200": {
+            "description": "Yahoo認証画面のURL",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/login/facebook": {
+      "post": {
+        "description": "Facebookログインの実施",
+        "parameters": [
+          {
+            "name": "request",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "code",
+                "state"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "アクセストークンを取得",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "access_token": {
+                  "type": "string"
+                },
+                "refresh_token": {
+                  "type": "string"
+                },
+                "id_token": {
+                  "type": "string"
+                },
+                "has_user_id": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証エラー",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/login/facebook/authorization_url": {
+      "get": {
+        "description": "Facebook認証画面のURLを取得する",
+        "responses": {
+          "200": {
+            "description": "Facebook認証画面のURL",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/me/articles/drafts": {
       "get": {
         "description": "下書き記事一覧情報を取得",
@@ -587,6 +1133,29 @@
         ]
       }
     },
+    "/me/articles/drafts/article_id": {
+      "post": {
+        "description": "article_idを作成",
+        "responses": {
+          "200": {
+            "description": "作成された記事ID",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "article_id": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cognitoUserPool": []
+          }
+        ]
+      }
+    },
     "/me/articles/{article_id}/drafts/publish": {
       "put": {
         "description": "指定された article_id の下書き記事を公開",
@@ -605,6 +1174,39 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/Publish"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation"
+          }
+        },
+        "security": [
+          {
+            "cognitoUserPool": []
+          }
+        ]
+      }
+    },
+    "/me/articles/{article_id}/drafts/publish_with_header": {
+      "put": {
+        "description": "指定された article_id の下書き記事を公開",
+        "parameters": [
+          {
+            "name": "article_id",
+            "in": "path",
+            "description": "対象記事の指定するために使用",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "publish",
+            "in": "body",
+            "description": "publish object",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PublishWithHeader"
             }
           }
         ],
@@ -808,6 +1410,39 @@
         ]
       }
     },
+    "/me/articles/{article_id}/public/republish_with_header": {
+      "put": {
+        "description": "指定された article_id の編集記事を公開する",
+        "parameters": [
+          {
+            "name": "article_id",
+            "in": "path",
+            "description": "対象記事を指定するために使用",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "publish",
+            "in": "body",
+            "description": "publish object",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PublishWithHeader"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation"
+          }
+        },
+        "security": [
+          {
+            "cognitoUserPool": []
+          }
+        ]
+      }
+    },
     "/me/articles/{article_id}/like": {
       "get": {
         "description": "指定された article_id の記事に「いいね」を行ったかを確認",
@@ -870,6 +1505,59 @@
             "name": "article_id",
             "in": "path",
             "description": "対象記事の指定するために使用",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "コメント登録の完了",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "comment_id": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cognitoUserPool": []
+          }
+        ]
+      }
+    },
+    "/me/articles/{article_id}/comments/reply": {
+      "post": {
+        "description": "指定された article_id の記事に対してコメントの返信を登録する",
+        "parameters": [
+          {
+            "name": "article_id",
+            "in": "path",
+            "description": "対象記事の指定するために使用",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "text",
+            "in": "body",
+            "description": "コメントの内容",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "parent_id",
+            "in": "body",
+            "description": "返信するスレッドの親コメントのid",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "replyed_user_id",
+            "in": "body",
+            "description": "返信先のユーザーのid",
             "required": true,
             "type": "string"
           }
@@ -990,11 +1678,24 @@
             "description": "対象記事の指定するために使用",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "Fraud",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Fraud"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "不正報告の実施成功"
+            "description": "不正報告の実施成功",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Fraud"
+            }
           }
         },
         "security": [
@@ -1041,6 +1742,60 @@
               "type": "object",
               "properties": {
                 "image_url": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cognitoUserPool": []
+          }
+        ]
+      }
+    },
+    "/me/articles/{article_id}/image_upload_url": {
+      "get": {
+        "description": "対象記事に画像データをアップロードできるURLを取得",
+        "parameters": [
+          {
+            "name": "article_id",
+            "description": "対象記事の指定するために使用",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "upload_image_size",
+            "in": "query",
+            "description": "対象画像のサイズ(byte)",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "upload_image_extension",
+            "in": "query",
+            "description": "対象画像の拡張子",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "gif",
+                "jpg",
+                "jpeg",
+                "png"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "アップロード用のURL",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "url": {
                   "type": "string"
                 }
               }
@@ -1124,6 +1879,38 @@
                 }
               }
             }
+          }
+        },
+        "security": [
+          {
+            "cognitoUserPool": []
+          }
+        ]
+      }
+    },
+    "/me/info/first_experiences": {
+      "put": {
+        "description": "ユーザーのALIS上での初体験を登録する",
+        "parameters": [
+          {
+            "name": "user_first_experience",
+            "in": "body",
+            "description": "登録するユーザーの体験情報",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "is_liked_article",
+                "is_tipped_article",
+                "is_got_token",
+                "is_created_article"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ユーザ情報更新成功"
           }
         },
         "security": [
@@ -1239,6 +2026,138 @@
         ]
       }
     },
+    "/me/articles/{article_id}/drafts/title": {
+      "put": {
+        "description": "下書き記事のタイトル更新",
+        "parameters": [
+          {
+            "name": "article_id",
+            "in": "path",
+            "description": "対象記事を指定するために使用",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "title",
+            "in": "body",
+            "description": "title object",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/MeArticlesDraftsTitleUpdate"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation"
+          }
+        },
+        "security": [
+          {
+            "cognitoUserPool": []
+          }
+        ]
+      }
+    },
+    "/me/articles/{article_id}/drafts/body": {
+      "put": {
+        "description": "下書き記事のbody更新",
+        "parameters": [
+          {
+            "name": "article_id",
+            "in": "path",
+            "description": "対象記事を指定するために使用",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "body object",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/MeArticlesDraftsBodyUpdate"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation"
+          }
+        },
+        "security": [
+          {
+            "cognitoUserPool": []
+          }
+        ]
+      }
+    },
+    "/me/articles/{article_id}/public/title": {
+      "put": {
+        "description": "公開記事のタイトル更新",
+        "parameters": [
+          {
+            "name": "article_id",
+            "in": "path",
+            "description": "対象記事を指定するために使用",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "title",
+            "in": "body",
+            "description": "title object",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/MeArticlesPublicTitleUpdate"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation"
+          }
+        },
+        "security": [
+          {
+            "cognitoUserPool": []
+          }
+        ]
+      }
+    },
+    "/me/articles/{article_id}/public/body": {
+      "put": {
+        "description": "公開記事のbody更新",
+        "parameters": [
+          {
+            "name": "article_id",
+            "in": "path",
+            "description": "対象記事を指定するために使用",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "body object",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/MeArticlesPublicBodyUpdate"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation"
+          }
+        },
+        "security": [
+          {
+            "cognitoUserPool": []
+          }
+        ]
+      }
+    },
     "/me/articles/{article_id}/pv": {
       "post": {
         "description": "対象記事の閲覧をカウント",
@@ -1293,6 +2212,53 @@
             "description": "ログインユーザ情報",
             "schema": {
               "$ref": "#/definitions/MeWalletBalance"
+            }
+          }
+        },
+        "security": [
+          {
+            "cognitoUserPool": []
+          }
+        ]
+      }
+    },
+    "/me/wallet/distributed_tokens": {
+      "get": {
+        "description": "ログインユーザのトークン付与情報を取得",
+        "responses": {
+          "200": {
+            "description": "ログインユーザのトークン付与情報",
+            "schema": {
+              "$ref": "#/definitions/DistributedTokens"
+            }
+          }
+        },
+        "security": [
+          {
+            "cognitoUserPool": []
+          }
+        ]
+      }
+    },
+    "/me/wallet/tip": {
+      "post": {
+        "description": "投げ銭を行う",
+        "parameters": [
+          {
+            "name": "tip",
+            "in": "body",
+            "description": "tip object",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/MeWalletTip"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "投げ銭受付結果",
+            "schema": {
+              "$ref": "#/definitions/MeWalletTip"
             }
           }
         },
@@ -1360,6 +2326,40 @@
         ]
       }
     },
+    "/me/external_provider_user": {
+      "post": {
+        "description": "user_idを作成",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "body",
+            "description": "user_id",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/MeExternalProviderUserCreate"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "作成されたuser_id",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "user_id": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cognitoUserPool": []
+          }
+        ]
+      }
+    },
     "/topics": {
       "get": {
         "description": "トピックの一覧を取得",
@@ -1374,6 +2374,38 @@
             }
           }
         }
+      }
+    },
+    "/me/users/{user_id}/fraud": {
+      "post": {
+        "description": "対象ユーザーに不正報告を行う",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "description": "対象ユーザーの指定するために使用",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "Fraud",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Fraud"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "不正報告の実施成功"
+          }
+        },
+        "security": [
+          {
+            "cognitoUserPool": []
+          }
+        ]
       }
     }
   },
