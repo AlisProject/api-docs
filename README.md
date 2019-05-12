@@ -60,6 +60,7 @@ curl -X GET "https://alis.to/api/articles/popular?limit=1" -H "accept: applicati
 - [ALIS利用規約](https://alis.to/terms)の範囲内で利用してください
 - 現状は特にリクエスト回数の制限等はありません
     - しかし過大な負荷や悪意あるリクエストが多発するなどした場合には制限を設ける予定です
+    - 必ずHTTPステータスを確認し、4xxになるアクセスは除却してください。
 - CORSは許可していません
     - 他ドメインのフロントエンドからのAPI利用はできません
 - フィードバックは[公式Discord](https://discordapp.com/invite/b6T44q3)へよろしくお願いします
