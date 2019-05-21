@@ -361,23 +361,6 @@
           "type": "string"
         }
       }
-    },
-    "DistributedTokens": {
-      "type": "object",
-      "properties": {
-        "article": {
-          "type": "integer"
-        },
-        "like": {
-          "type": "integer"
-        },
-        "tip": {
-          "type": "integer"
-        },
-        "bonus": {
-          "type": "integer"
-        }
-      }
     }
   },
   "paths": {
@@ -2212,24 +2195,6 @@
             "description": "ログインユーザ情報",
             "schema": {
               "$ref": "#/definitions/MeWalletBalance"
-            }
-          }
-        },
-        "security": [
-          {
-            "cognitoUserPool": []
-          }
-        ]
-      }
-    },
-    "/me/wallet/distributed_tokens": {
-      "get": {
-        "description": "ログインユーザのトークン付与情報を取得",
-        "responses": {
-          "200": {
-            "description": "ログインユーザのトークン付与情報",
-            "schema": {
-              "$ref": "#/definitions/DistributedTokens"
             }
           }
         },
