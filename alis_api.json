@@ -395,7 +395,7 @@
             "in": "query",
             "description": "検索タグ(tag, queryいずれかは必須)",
             "required": false,
-            "type": "integer"
+            "type": "string"
           }
         ],
         "responses": {
